@@ -1,2 +1,3 @@
-/res/db
-/res/secret.json
+res/db
+res/secret.json
+.idea/
