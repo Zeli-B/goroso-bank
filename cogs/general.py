@@ -126,7 +126,8 @@ class GeneralCog(Cog):
                 owner.words))
             await ctx.send(f':white_check_mark: __{user.display_name}__님의 단어:\n> {words}', delete_after=PERIOD)
         else:
-            await ctx.send(f':white_check_mark: __{user.display_name}__님은 아직 단어를 등록하지 않았습니다.', delete_after=PERIOD)
+            await ctx.send(f':white_check_mark: __{user.display_name}__님은 아직 단어를 등록하지 않았습니다.',
+                           delete_after=PERIOD)
 
     @cog_slash(
         name='register',
@@ -160,7 +161,8 @@ class GeneralCog(Cog):
             return
         owner = Owner.get_by_id(ctx.author.id)
         if owner is None:
-            await ctx.send(f':warning: 단어를 만들기 전에 사용자를 등록해야 합니다! 사용자 등록을 하려면 `/newcomer`를 입력하세요.', delete_after=PERIOD)
+            await ctx.send(f':warning: 단어를 만들기 전에 사용자를 등록해야 합니다! 사용자 등록을 하려면 `/newcomer`를 입력하세요.',
+                           delete_after=PERIOD)
             return
         if owner.money < price:
             await ctx.send(f':warning: __{ctx.author.display_name}__님의 소지금이 부족합니다! '
@@ -168,7 +170,8 @@ class GeneralCog(Cog):
             return
         owner.set_money(owner.money - price)
         word = Word.new(owner, word, price)
-        await ctx.send(f':white_check_mark: __{word.word}__ 단어를 등록했습니다.', embed=word.get_embed(ctx), delete_after=PERIOD)
+        await ctx.send(f':white_check_mark: __{word.word}__ 단어를 등록했습니다.', embed=word.get_embed(ctx),
+                       delete_after=PERIOD)
 
         self.words = Word.get_all()
 
@@ -191,7 +194,8 @@ class GeneralCog(Cog):
             await ctx.send(f':warning: __{word}__ 단어를 찾을 수 없습니다.', delete_after=PERIOD)
             return
         if economy_word.owner_id != ctx.author.id:
-            await ctx.send(f':warning: __{economy_word.word}__ 단어는 __{ctx.author.display_name}__님이 등록한 단어가 아닙니다.', delete_after=PERIOD)
+            await ctx.send(f':warning: __{economy_word.word}__ 단어는 __{ctx.author.display_name}__님이 등록한 단어가 아닙니다.',
+                           delete_after=PERIOD)
             return
 
         if market.is_on_sale(economy_word.id):
@@ -250,7 +254,8 @@ class GeneralCog(Cog):
                 field.append(f'{i + 1}. {user.display_name} ({owner.money:,.2f} {CURRENCY_SYMBOL})')
 
         if not field:
-            await ctx.send(f':warning: __{kind}__ 랭킹을 확인할 수 없습니다! 종류를 잘못 입력했거나 아직 사용자 또는 단어가 없습니다!', delete_after=PERIOD)
+            await ctx.send(f':warning: __{kind}__ 랭킹을 확인할 수 없습니다! 종류를 잘못 입력했거나 아직 사용자 또는 단어가 없습니다!',
+                           delete_after=PERIOD)
             return
         embed = Embed(title=f'__{kind}__ 랭킹', color=YELLOW)
         embed.add_field(name='순위', value='\n'.join(field), inline=False)
@@ -301,7 +306,8 @@ class GeneralCog(Cog):
         if economy_word.owner_id != ctx.author_id:
             user = self.bot.get_user(economy_word.owner_id)
             await ctx.send(f':warning: __{economy_word.word}__ 단어를 소유하고 있지 않습니다. '
-                           f'__{economy_word.word}__ 단어는 __{user.display_name}__님이 소유하고 있습니다.', delete_after=PERIOD)
+                           f'__{economy_word.word}__ 단어는 __{user.display_name}__님이 소유하고 있습니다.',
+                           delete_after=PERIOD)
             return
         if market.is_on_sale(economy_word.id):
             await ctx.send(f':warning: __{economy_word.word}__ 단어는 이미 시장에 내놓여있습니다.', delete_after=PERIOD)
@@ -312,7 +318,8 @@ class GeneralCog(Cog):
 
         market.exhibit(economy_word, price)
 
-        await ctx.send(f':white_check_mark: __{economy_word.word}__ 단어를 시장에 __{price} {CURRENCY_SYMBOL}__에 내놓았습니다.', delete_after=PERIOD)
+        await ctx.send(f':white_check_mark: __{economy_word.word}__ 단어를 시장에 __{price} {CURRENCY_SYMBOL}__에 내놓았습니다.',
+                       delete_after=PERIOD)
 
     @cog_slash(
         name='withhold',
@@ -412,7 +419,8 @@ class GeneralCog(Cog):
             await ctx.send(f':warning: 돈이 부족합니다. '
                            f'현재 가지고 있는 돈은 __{buyer.money:,.2f} {CURRENCY_SYMBOL}__이고 '
                            f'단어는 __{price:,.2f} {CURRENCY_SYMBOL}__이므로 '
-                           f'__{price - buyer.money:,.2f} {CURRENCY_SYMBOL}__{i_ga(CURRENCY_NAME)} 더 필요합니다.', delete_after=PERIOD)
+                           f'__{price - buyer.money:,.2f} {CURRENCY_SYMBOL}__{i_ga(CURRENCY_NAME)} 더 필요합니다.',
+                           delete_after=PERIOD)
             return
         owner = Owner.get_by_id(economy_word.owner_id)
         buyer.set_money(buyer.money - price)
@@ -449,16 +457,20 @@ class GeneralCog(Cog):
             await ctx.send(f':warning: 자기 자신에게는 송금할 수 없습니다.', delete_after=PERIOD)
             return
         if amount > Owner.get_by_id(ctx.author_id).money:
-            await ctx.send(f':warning: 돈이 부족합니다. '
-                           f'현재 가지고 있는 돈은 __{Owner.get_by_id(ctx.author_id).money:,.2f} {CURRENCY_SYMBOL}__이고 '
-                           f'송금할 금액은 __{amount:,.2f} {CURRENCY_SYMBOL}__이므로 '
-                           f'__{amount - Owner.get_by_id(ctx.author_id).money:,.2f} {CURRENCY_SYMBOL}__{i_ga(CURRENCY_NAME)} 더 필요합니다.', delete_after=PERIOD)
+            await ctx.send(
+                f':warning: 돈이 부족합니다. '
+                f'현재 가지고 있는 돈은 __{Owner.get_by_id(ctx.author_id).money:,.2f} {CURRENCY_SYMBOL}__이고 '
+                f'송금할 금액은 __{amount:,.2f} {CURRENCY_SYMBOL}__이므로 '
+                f'__{amount - Owner.get_by_id(ctx.author_id).money:,.2f} {CURRENCY_SYMBOL}__{i_ga(CURRENCY_NAME)} '
+                f'더 필요합니다.',
+                delete_after=PERIOD)
             return
         from_owner = Owner.get_by_id(ctx.author_id)
         to_owner = Owner.get_by_id(to.id)
         from_owner.set_money(from_owner.money - amount)
         to_owner.set_money(to_owner.money + amount)
-        await ctx.send(f':white_check_mark: __{amount:,.2f} {CURRENCY_SYMBOL}__{eul_reul(CURRENCY_NAME)} 송금했습니다.', delete_after=PERIOD)
+        await ctx.send(f':white_check_mark: __{amount:,.2f} {CURRENCY_SYMBOL}__{eul_reul(CURRENCY_NAME)} 송금했습니다.',
+                       delete_after=PERIOD)
 
     @cog_slash(
         name='log',
