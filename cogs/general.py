@@ -7,7 +7,7 @@ from discord_slash import SlashCommandOptionType, SlashContext
 from discord_slash.cog_ext import cog_slash
 from discord_slash.utils.manage_commands import create_option
 
-from const import CURRENCY_SYMBOL, DEVELOPERS, GUILDS, CURRENCY_NAME, YELLOW, AQUA
+from const import CURRENCY_SYMBOL, DEVELOPERS, GUILDS, CURRENCY_NAME, YELLOW, AQUA, PERIOD
 from economy import market
 from economy.models import Owner, Word
 from economy.util import get_ranking_by_money, add_log, get_log
@@ -17,6 +17,7 @@ from util import eul_reul, i_ga
 class GeneralCog(Cog):
     def __init__(self, bot):
         self.bot: Bot = bot
+
         self.words = Word.get_all()
 
     async def handle_word_cost(self, message: Message):
@@ -82,7 +83,8 @@ class GeneralCog(Cog):
         if owner is None:
             await ctx.send(f':warning: __{user.display_name}__ 사용자를 찾을 수 없습니다.')
             return
-        await ctx.send(f':white_check_mark: __{user.display_name}__님의 소지금: __{owner.money:,.2f} {CURRENCY_SYMBOL}__')
+        await ctx.send(f':white_check_mark: __{user.display_name}__님의 소지금: __{owner.money:,.2f} {CURRENCY_SYMBOL}__',
+                       delete_after=PERIOD)
 
     @cog_slash(
         name='newcomer',
@@ -95,7 +97,8 @@ class GeneralCog(Cog):
             return
         Owner.new(ctx.author.id)
         await ctx.send(f':white_check_mark: 새로운 사용자 __{ctx.author.display_name}__{eul_reul(ctx.author.display_name)} '
-                       f'추가했습니다.')
+                       f'추가했습니다.',
+                       delete_after=PERIOD)
 
     @cog_slash(
         name='user',
@@ -115,15 +118,15 @@ class GeneralCog(Cog):
             user = ctx.author
         owner = Owner.get_by_id(user.id)
         if owner is None:
-            await ctx.send(f':warning: __{user.display_name}__ 사용자를 찾을 수 없습니다.')
+            await ctx.send(f':warning: __{user.display_name}__ 사용자를 찾을 수 없습니다.', delete_after=PERIOD)
             return
         if owner.words:
             words = ', '.join(map(
                 lambda word: f'__{word.word}__' if market.is_on_sale(word.id) else word.word,
                 owner.words))
-            await ctx.send(f':white_check_mark: __{user.display_name}__님의 단어:\n> {words}')
+            await ctx.send(f':white_check_mark: __{user.display_name}__님의 단어:\n> {words}', delete_after=PERIOD)
         else:
-            await ctx.send(f':white_check_mark: __{user.display_name}__님은 아직 단어를 등록하지 않았습니다.')
+            await ctx.send(f':white_check_mark: __{user.display_name}__님은 아직 단어를 등록하지 않았습니다.', delete_after=PERIOD)
 
     @cog_slash(
         name='register',
@@ -146,26 +149,26 @@ class GeneralCog(Cog):
     )
     async def register(self, ctx: SlashContext, price: float, word: str):
         if Word.is_duplicate(word):
-            await ctx.send(f':warning: __{word}__ 단어는 이미 등록되어 있습니다.')
+            await ctx.send(f':warning: __{word}__ 단어는 이미 등록되어 있습니다.', delete_after=PERIOD)
             return
         if price <= 0:
             await ctx.send(f':warning: 단어의 가격은 0 {CURRENCY_NAME}{eul_reul(CURRENCY_NAME)} 넘어야 합니다. '
-                           f'(`{price}`라고 입력하셨습니다.)')
+                           f'(`{price}`라고 입력하셨습니다.)', delete_after=PERIOD)
             return
         if not Word.is_valid(word):
-            await ctx.send(f':warning: 단어에는 완성형 한글만 사용할 수 있고, 두 글자 이상이어야 합니다!')
+            await ctx.send(f':warning: 단어에는 완성형 한글만 사용할 수 있고, 두 글자 이상이어야 합니다!', delete_after=PERIOD)
             return
         owner = Owner.get_by_id(ctx.author.id)
         if owner is None:
-            await ctx.send(f':warning: 단어를 만들기 전에 사용자를 등록해야 합니다! 사용자 등록을 하려면 `/newcomer`를 입력하세요.')
+            await ctx.send(f':warning: 단어를 만들기 전에 사용자를 등록해야 합니다! 사용자 등록을 하려면 `/newcomer`를 입력하세요.', delete_after=PERIOD)
             return
         if owner.money < price:
             await ctx.send(f':warning: __{ctx.author.display_name}__님의 소지금이 부족합니다! '
-                           f'(현재 __{owner.money:,.2f} {CURRENCY_SYMBOL}__만큼을 가지고 있습니다.)')
+                           f'(현재 __{owner.money:,.2f} {CURRENCY_SYMBOL}__만큼을 가지고 있습니다.)', delete_after=PERIOD)
             return
         owner.set_money(owner.money - price)
         word = Word.new(owner, word, price)
-        await ctx.send(f':white_check_mark: __{word.word}__ 단어를 등록했습니다.', embed=word.get_embed(ctx))
+        await ctx.send(f':white_check_mark: __{word.word}__ 단어를 등록했습니다.', embed=word.get_embed(ctx), delete_after=PERIOD)
 
         self.words = Word.get_all()
 
@@ -185,10 +188,10 @@ class GeneralCog(Cog):
     async def cancel(self, ctx: SlashContext, word: str):
         economy_word = Word.get_by_word(word)
         if economy_word is None:
-            await ctx.send(f':warning: __{word}__ 단어를 찾을 수 없습니다.')
+            await ctx.send(f':warning: __{word}__ 단어를 찾을 수 없습니다.', delete_after=PERIOD)
             return
         if economy_word.owner_id != ctx.author.id:
-            await ctx.send(f':warning: __{economy_word.word}__ 단어는 __{ctx.author.display_name}__님이 등록한 단어가 아닙니다.')
+            await ctx.send(f':warning: __{economy_word.word}__ 단어는 __{ctx.author.display_name}__님이 등록한 단어가 아닙니다.', delete_after=PERIOD)
             return
 
         if market.is_on_sale(economy_word.id):
@@ -196,7 +199,7 @@ class GeneralCog(Cog):
         Word.remove_word(word)
         owner = Owner.get_by_id(ctx.author.id)
         owner.set_money(owner.money + economy_word.price * 0.9)
-        await ctx.send(f':white_check_mark: __{economy_word.word}__ 단어를 삭제했습니다.')
+        await ctx.send(f':white_check_mark: __{economy_word.word}__ 단어를 삭제했습니다.', delete_after=PERIOD)
 
         self.words = Word.get_all()
 
@@ -216,13 +219,13 @@ class GeneralCog(Cog):
     async def word(self, ctx: SlashContext, word: str):
         economy_word = Word.get_by_word(word)
         if economy_word is None:
-            await ctx.send(f':warning: __{word}__ 단어를 찾을 수 없습니다.')
+            await ctx.send(f':warning: __{word}__ 단어를 찾을 수 없습니다.', delete_after=PERIOD)
             return
         message = await ctx.send(f':hourglass: __{word}__ 단어 정보를 불러오는 중입니다...')
         embed = economy_word.get_embed(ctx)
         embed.add_field(name='판매중', value=':o: 구매 가능' if market.is_on_sale(economy_word.id) else ':x: 구매 불가능')
         await message.edit(content=f':white_check_mark: __{word}__ 단어 정보를 불러왔습니다!',
-                           embed=embed)
+                           embed=embed, delete_after=PERIOD)
 
     @cog_slash(
         name='rank',
@@ -247,11 +250,11 @@ class GeneralCog(Cog):
                 field.append(f'{i + 1}. {user.display_name} ({owner.money:,.2f} {CURRENCY_SYMBOL})')
 
         if not field:
-            await ctx.send(f':warning: __{kind}__ 랭킹을 확인할 수 없습니다! 종류를 잘못 입력했거나 아직 사용자 또는 단어가 없습니다!')
+            await ctx.send(f':warning: __{kind}__ 랭킹을 확인할 수 없습니다! 종류를 잘못 입력했거나 아직 사용자 또는 단어가 없습니다!', delete_after=PERIOD)
             return
         embed = Embed(title=f'__{kind}__ 랭킹', color=YELLOW)
         embed.add_field(name='순위', value='\n'.join(field), inline=False)
-        await message.edit(content=f':white_check_mark: __{kind}__ 랭킹을 불러왔습니다!', embed=embed)
+        await message.edit(content=f':white_check_mark: __{kind}__ 랭킹을 불러왔습니다!', embed=embed, delete_after=PERIOD)
 
     @cog_slash(
         name='prices',
@@ -269,7 +272,7 @@ class GeneralCog(Cog):
 
         content += '\n' + '\n'.join(prices) + '\n'
 
-        await ctx.send(content)
+        await ctx.send(content, delete_after=PERIOD)
 
     @cog_slash(
         name='exhibit',
@@ -293,23 +296,23 @@ class GeneralCog(Cog):
     async def exhibit(self, ctx: SlashContext, word: str, price: float):
         economy_word = Word.get_by_word(word)
         if economy_word is None:
-            await ctx.send(f':warning: __{word}__ 단어를 찾을 수 없습니다.')
+            await ctx.send(f':warning: __{word}__ 단어를 찾을 수 없습니다.', delete_after=PERIOD)
             return
         if economy_word.owner_id != ctx.author_id:
             user = self.bot.get_user(economy_word.owner_id)
             await ctx.send(f':warning: __{economy_word.word}__ 단어를 소유하고 있지 않습니다. '
-                           f'__{economy_word.word}__ 단어는 __{user.display_name}__님이 소유하고 있습니다.')
+                           f'__{economy_word.word}__ 단어는 __{user.display_name}__님이 소유하고 있습니다.', delete_after=PERIOD)
             return
         if market.is_on_sale(economy_word.id):
-            await ctx.send(f':warning: __{economy_word.word}__ 단어는 이미 시장에 내놓여있습니다.')
+            await ctx.send(f':warning: __{economy_word.word}__ 단어는 이미 시장에 내놓여있습니다.', delete_after=PERIOD)
             return
         if price <= 0:
-            await ctx.send(f':warning: 단어의 가격은 0보다 커야 합니다.')
+            await ctx.send(f':warning: 단어의 가격은 0보다 커야 합니다.', delete_after=PERIOD)
             return
 
         market.exhibit(economy_word, price)
 
-        await ctx.send(f':white_check_mark: __{economy_word.word}__ 단어를 시장에 __{price} {CURRENCY_SYMBOL}__에 내놓았습니다.')
+        await ctx.send(f':white_check_mark: __{economy_word.word}__ 단어를 시장에 __{price} {CURRENCY_SYMBOL}__에 내놓았습니다.', delete_after=PERIOD)
 
     @cog_slash(
         name='withhold',
@@ -327,22 +330,22 @@ class GeneralCog(Cog):
     async def withhold(self, ctx: SlashContext, word: str):
         economy_word = Word.get_by_word(word)
         if economy_word is None:
-            await ctx.send(f':warning: __{word}__ 단어를 찾을 수 없습니다.')
+            await ctx.send(f':warning: __{word}__ 단어를 찾을 수 없습니다.', delete_after=PERIOD)
             return
         if economy_word.owner_id != ctx.author_id:
             user = self.bot.get_user(economy_word.owner_id)
             await ctx.send(f':warning: __{economy_word.word}__ 단어를 소유하고 있지 않습니다. '
-                           f'__{economy_word}__ 단어는 __{user.display_name}__님이 소유하고 있습니다.')
+                           f'__{economy_word}__ 단어는 __{user.display_name}__님이 소유하고 있습니다.', delete_after=PERIOD)
             return
         if not market.is_on_sale(economy_word.id):
-            await ctx.send(f':warning: __{economy_word.word}__ 단어는 시장에 내놓지 않았습니다.')
+            await ctx.send(f':warning: __{economy_word.word}__ 단어는 시장에 내놓지 않았습니다.', delete_after=PERIOD)
             return
 
         owner = Owner.get_by_id(ctx.author_id)
         market.withhold(economy_word.id)
         owner.set_money(owner.money + economy_word.price)
 
-        await ctx.send(f':white_check_mark: __{economy_word.word}__ 단어 출품을 취소했습니다.')
+        await ctx.send(f':white_check_mark: __{economy_word.word}__ 단어 출품을 취소했습니다.', delete_after=PERIOD)
 
         self.words = Word.get_all()
 
@@ -367,7 +370,7 @@ class GeneralCog(Cog):
             words = market.get_recent_words()
 
         if len(words) == 0:
-            await ctx.send(f':warning: 시장에 내놓은 단어가 없습니다.')
+            await ctx.send(f':warning: 시장에 내놓은 단어가 없습니다.', delete_after=PERIOD)
             return
 
         embed = Embed(title='시장', color=AQUA, description='정렬: ' + sort)
@@ -377,7 +380,7 @@ class GeneralCog(Cog):
                             value=f'**판매가**  {price} {CURRENCY_SYMBOL}\n'
                                   f'**원가**  {word.price} {CURRENCY_SYMBOL}\n'
                                   f'**현 소유자** {self.bot.get_user(word.owner_id).display_name}')
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed, delete_after=PERIOD)
 
     @cog_slash(
         name='buy',
@@ -395,13 +398,13 @@ class GeneralCog(Cog):
     async def buy(self, ctx: SlashContext, word: str):
         economy_word = Word.get_by_word(word)
         if economy_word is None:
-            await ctx.send(f':warning: __{word}__ 단어를 찾을 수 없습니다.')
+            await ctx.send(f':warning: __{word}__ 단어를 찾을 수 없습니다.', delete_after=PERIOD)
             return
         if not market.is_on_sale(economy_word.id):
-            await ctx.send(f':warning: __{economy_word.word}__ 단어는 시장에 내놓지 않았습니다.')
+            await ctx.send(f':warning: __{economy_word.word}__ 단어는 시장에 내놓지 않았습니다.', delete_after=PERIOD)
             return
         if economy_word.owner_id == ctx.author_id:
-            await ctx.send(f':warning: __{economy_word.word}__ 단어는 이미 소유하고 있습니다.')
+            await ctx.send(f':warning: __{economy_word.word}__ 단어는 이미 소유하고 있습니다.', delete_after=PERIOD)
             return
         buyer = Owner.get_by_id(ctx.author_id)
         price = market.get_price(economy_word.id)
@@ -409,13 +412,13 @@ class GeneralCog(Cog):
             await ctx.send(f':warning: 돈이 부족합니다. '
                            f'현재 가지고 있는 돈은 __{buyer.money:,.2f} {CURRENCY_SYMBOL}__이고 '
                            f'단어는 __{price:,.2f} {CURRENCY_SYMBOL}__이므로 '
-                           f'__{price - buyer.money:,.2f} {CURRENCY_SYMBOL}__{i_ga(CURRENCY_NAME)} 더 필요합니다.')
+                           f'__{price - buyer.money:,.2f} {CURRENCY_SYMBOL}__{i_ga(CURRENCY_NAME)} 더 필요합니다.', delete_after=PERIOD)
             return
         owner = Owner.get_by_id(economy_word.owner_id)
         buyer.set_money(buyer.money - price)
         owner.set_money(owner.money + price)
         market.buy(economy_word, buyer)
-        await ctx.send(f':white_check_mark: __{economy_word.word}__ 단어를 구매했습니다.')
+        await ctx.send(f':white_check_mark: __{economy_word.word}__ 단어를 구매했습니다.', delete_after=PERIOD)
 
         self.words = Word.get_all()
 
@@ -440,22 +443,22 @@ class GeneralCog(Cog):
     )
     async def remit(self, ctx: SlashContext, to: User, amount: float):
         if amount <= 0:
-            await ctx.send(f':warning: 송금할 금액은 0보다 커야 합니다.')
+            await ctx.send(f':warning: 송금할 금액은 0보다 커야 합니다.', delete_after=PERIOD)
             return
         if to.id == ctx.author_id:
-            await ctx.send(f':warning: 자기 자신에게는 송금할 수 없습니다.')
+            await ctx.send(f':warning: 자기 자신에게는 송금할 수 없습니다.', delete_after=PERIOD)
             return
         if amount > Owner.get_by_id(ctx.author_id).money:
             await ctx.send(f':warning: 돈이 부족합니다. '
                            f'현재 가지고 있는 돈은 __{Owner.get_by_id(ctx.author_id).money:,.2f} {CURRENCY_SYMBOL}__이고 '
                            f'송금할 금액은 __{amount:,.2f} {CURRENCY_SYMBOL}__이므로 '
-                           f'__{amount - Owner.get_by_id(ctx.author_id).money:,.2f} {CURRENCY_SYMBOL}__{i_ga(CURRENCY_NAME)} 더 필요합니다.')
+                           f'__{amount - Owner.get_by_id(ctx.author_id).money:,.2f} {CURRENCY_SYMBOL}__{i_ga(CURRENCY_NAME)} 더 필요합니다.', delete_after=PERIOD)
             return
         from_owner = Owner.get_by_id(ctx.author_id)
         to_owner = Owner.get_by_id(to.id)
         from_owner.set_money(from_owner.money - amount)
         to_owner.set_money(to_owner.money + amount)
-        await ctx.send(f':white_check_mark: __{amount:,.2f} {CURRENCY_SYMBOL}__{eul_reul(CURRENCY_NAME)} 송금했습니다.')
+        await ctx.send(f':white_check_mark: __{amount:,.2f} {CURRENCY_SYMBOL}__{eul_reul(CURRENCY_NAME)} 송금했습니다.', delete_after=PERIOD)
 
     @cog_slash(
         name='log',
@@ -486,7 +489,7 @@ class GeneralCog(Cog):
             word = Word.get_by_id(word_id)
             lines.append(f'{i + 1}. {datetime}, {user.display_name}: {word.word}')
         embed = Embed(title='기록', description='\n'.join(lines))
-        await message.edit(content=f':white_check_mark: `{type_}` 기록을 가져왔습니다.', embed=embed)
+        await message.edit(content=f':white_check_mark: `{type_}` 기록을 가져왔습니다.', embed=embed, delete_after=PERIOD)
 
     @cog_slash(
         name='debug_remove',
@@ -495,10 +498,10 @@ class GeneralCog(Cog):
     )
     async def debug_remove(self, ctx: SlashContext):
         if ctx.author.id not in DEVELOPERS:
-            await ctx.send(f':warning: __{ctx.author.display_name}__님은 권한이 없습니다.')
+            await ctx.send(f':warning: __{ctx.author.display_name}__님은 권한이 없습니다.', delete_after=PERIOD)
             return
         Owner.remove_owner(ctx.author.id)
-        await ctx.send(f':white_check_mark: __{ctx.author.display_name}__ 사용자를 삭제했습니다.')
+        await ctx.send(f':white_check_mark: __{ctx.author.display_name}__ 사용자를 삭제했습니다.', delete_after=PERIOD)
 
     @cog_slash(
         name='debug_set_money',
@@ -521,17 +524,17 @@ class GeneralCog(Cog):
     )
     async def debug_set_money(self, ctx: SlashContext, money: float, user: Optional[User] = None):
         if ctx.author.id not in DEVELOPERS:
-            await ctx.send(f':warning: __{ctx.author.display_name}__님은 권한이 없습니다.')
+            await ctx.send(f':warning: __{ctx.author.display_name}__님은 권한이 없습니다.', delete_after=PERIOD)
             return
         if user is None:
             user = ctx.author
         owner = Owner.get_by_id(user.id)
         if owner is None:
-            await ctx.send(f':warning: __{user.display_name}__ 사용자를 찾을 수 없습니다.')
+            await ctx.send(f':warning: __{user.display_name}__ 사용자를 찾을 수 없습니다.', delete_after=PERIOD)
             return
         owner.set_money(money)
         await ctx.send(f':white_check_mark: __{user.display_name}__님의 소지금을 '
-                       f'__{money:,.2f} {CURRENCY_SYMBOL}__로 설정했습니다.')
+                       f'__{money:,.2f} {CURRENCY_SYMBOL}__로 설정했습니다.', delete_after=PERIOD)
 
 
 def setup(bot: Bot):
