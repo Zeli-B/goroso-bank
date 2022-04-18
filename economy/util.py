@@ -24,8 +24,7 @@ def get_ranking_by_word(count: int = 10):
         if row[1] not in words:
             word = Word.get_by_id(row[1])
             words[row[1]] = [word, word.get_fee(), 0.0]
-        else:
-            words[row[1]][2] += words[row[1]][1]
+        words[row[1]][2] += words[row[1]][1]
     return list(sorted(words.values(), key=lambda x: x[2], reverse=True))[:count]
 
 
