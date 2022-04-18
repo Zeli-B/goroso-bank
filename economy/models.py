@@ -243,4 +243,12 @@ class Word:
         embed.add_field(name='사용료', value=f'__**{self.get_fee():.2f} {CURRENCY_SYMBOL}**__', inline=False)
         embed.add_field(name='가격', value=f'{self.price:.1f} {CURRENCY_SYMBOL}')
         embed.add_field(name='소유자', value=f'{owner.display_name}')
+        if self.preferences:
+            lines = list()
+            for user_id, rate in self.preferences.items():
+                user = ctx.guild.get_member(user_id)
+                if user is None:
+                    continue
+                lines.append(f'- {user.display_name}: {(1 - rate) * 100:.2f}%')
+            embed.add_field(name='할인', value='\n'.join(lines))
         return embed
