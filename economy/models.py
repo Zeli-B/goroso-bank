@@ -232,6 +232,7 @@ class Word:
             cursor.execute('INSERT INTO preference (word_id, owner_id, rate) VALUES(?, ?, ?)',
                            (self.id, owner_id, rate))
         database.commit()
+        self.load_preferences()
         return self
 
     def get_fee(self) -> float:
