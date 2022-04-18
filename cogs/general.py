@@ -43,8 +43,9 @@ class GeneralCog(Cog):
                     censored = True
                     break
                 else:
-                    owner.set_money(owner.money - fee)
-                    word_owner.set_money(word_owner.money + fee * 1.1)
+                    rate = word.preferences[owner.id] if owner.id in word.preferences else 1
+                    owner.set_money(owner.money - fee * rate)
+                    word_owner.set_money(word_owner.money + fee * rate * 1.1)
                     add_log(message.author.id, word.id)
 
         if censored:
@@ -506,6 +507,51 @@ class GeneralCog(Cog):
             lines.append(f'{i + 1}. {datetime}, {user.display_name}: {word.word}')
         embed = Embed(title='기록', description='\n'.join(lines))
         await message.edit(content=f':white_check_mark: `{type_}` 기록을 가져왔습니다.', embed=embed, delete_after=PERIOD)
+
+    @cog_slash(
+        name='discount',
+        description='특정한 사용자에게 단어 사용 할인을 적용합니다.',
+        guild_ids=GUILDS,
+        options=[
+            create_option(
+                name='user',
+                description='할인을 적용할 사용자',
+                option_type=SlashCommandOptionType.USER,
+                required=True
+            ),
+            create_option(
+                name='word',
+                description='할인을 적용할 단어',
+                option_type=SlashCommandOptionType.STRING,
+                required=True
+            ),
+            create_option(
+                name='discount',
+                description='할인을 적용할 할인율 (0 ~ 100, 100으로 하면 전액 할인. 0으로 하면 할인을 취소합니다.)',
+                option_type=SlashCommandOptionType.FLOAT,
+                required=True
+            )
+        ]
+    )
+    async def discount(self, ctx: SlashContext, user: User, word: str, discount: float):
+        if discount < 0 or discount > 100:
+            await ctx.send(':warning: 할인은 0 ~ 100 사이의 값을 입력해야 합니다.', delete_after=PERIOD)
+            return
+        word = Word.get_by_word(word)
+        if word is None:
+            await ctx.send(':warning: 존재하지 않는 단어입니다.', delete_after=PERIOD)
+            return
+        if word.owner_id != ctx.author_id:
+            await ctx.send(':warning: 자신의 단어만 할인을 적용할 수 있습니다.', delete_after=PERIOD)
+            return
+        preference_rate = 1 - discount / 100
+        word.apply_preference(user.id, preference_rate)
+        if preference_rate != 1:
+            await ctx.send(f':white_check_mark: __{user.display_name}__에게 __{word.word}__ 단어를 '
+                           f'__{discount}%__ 할인으로 적용했습니다.', delete_after=PERIOD)
+        else:
+            await ctx.send(f':white_check_mark: __{user.display_name}__에게 __{word.word}__ 단어의 할인을 취소했습니다.',
+                           delete_after=PERIOD)
 
     @cog_slash(
         name='debug_remove',

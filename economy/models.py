@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from discord import Embed
 from discord_slash import SlashContext
@@ -201,12 +201,38 @@ class Word:
         self.word = word
         self.owner_id = owner_id
         self.price = price
+        self.preferences: Dict[int, float] = dict()
+        self.load_preferences()
 
     def __str__(self):
         return f'Word {self.word} ({self.owner_id})'
 
     def __repr__(self):
         return f'Word({self.id}, {self.word}, {self.owner_id}, {self.price})'
+
+    def load_preferences(self) -> 'Word':
+        """ Load the preferences of the word. """
+        self.preferences.clear()
+        cursor = database.cursor()
+        cursor.execute('SELECT * FROM preference WHERE word_id = ?', (self.id,))
+        rows = cursor.fetchall()
+        for row in rows:
+            self.preferences[row[0]] = row[2]
+        return self
+
+    def apply_preference(self, owner_id: int, rate: float) -> 'Word':
+        cursor = database.cursor()
+        if rate == 1:
+            cursor.execute('DELETE FROM preference WHERE word_id = ? AND owner_id = ?',
+                           (self.id, owner_id))
+        elif owner_id in self.preferences:
+            cursor.execute('UPDATE preference SET rate = ? WHERE word_id = ? AND owner_id = ?',
+                           (rate, self.id, owner_id))
+        else:
+            cursor.execute('INSERT INTO preference (word_id, owner_id, rate) VALUES(?, ?, ?)',
+                           (self.id, owner_id, rate))
+        database.commit()
+        return self
 
     def get_fee(self) -> float:
         return Word.get_price_rate(len(self.word)) * self.price
