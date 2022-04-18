@@ -211,7 +211,7 @@ class Word:
         return f'Word({self.id}, {self.word}, {self.owner_id}, {self.price})'
 
     def load_preferences(self) -> 'Word':
-        """ Load the preferences of the word. """
+        """ Load the preferences of the word and store them in a dictionary. """
         self.preferences.clear()
         cursor = database.cursor()
         cursor.execute('SELECT * FROM preference WHERE word_id = ?', (self.id,))
@@ -221,6 +221,12 @@ class Word:
         return self
 
     def apply_preference(self, owner_id: int, rate: float) -> 'Word':
+        """
+        Apply a preference to the word.
+        :param owner_id: discord ID of the preference target
+        :param rate: [0, 1]
+        :return:
+        """
         cursor = database.cursor()
         if rate == 1:
             cursor.execute('DELETE FROM preference WHERE word_id = ? AND owner_id = ?',
@@ -251,5 +257,5 @@ class Word:
                 if user is None:
                     continue
                 lines.append(f'- {user.display_name}: {(1 - rate) * 100:.2f}%')
-            embed.add_field(name='할인', value='\n'.join(lines))
+            embed.add_field(name='할인', value='\n'.join(lines), inline=False)
         return embed
