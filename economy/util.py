@@ -12,7 +12,7 @@ def get_ranking_by_money(count: int = 10) -> List[Owner]:
     return [Owner.get_by_id(row[0]) for row in cursor.fetchall()]
 
 
-def get_ranking_by_word(count: int = 10) -> List[List[Word, float, float, int]]:
+def get_ranking_by_word(count: int = 10):
     """
     Get ranking by word
     :param count: count of the rows
