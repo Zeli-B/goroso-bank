@@ -254,7 +254,8 @@ class GeneralCog(Cog):
                 field.append(f'{i + 1}. {user.display_name} ({owner.money:,.2f} {CURRENCY_SYMBOL})')
         elif kind == 'word':
             for i, (word, fee, proceed) in enumerate(get_ranking_by_word(10)):
-                field.append(f'{i + 1}. {word} ({proceed:,.2f} / {fee:,.2f} {CURRENCY_SYMBOL})')
+                user = self.bot.get_user(word.owner_id)
+                field.append(f'{i + 1}. {word.word} ({user.display_name}, {proceed:,.2f} / {fee:,.2f} {CURRENCY_SYMBOL})')
 
         if not field:
             await ctx.send(f':warning: __{kind}__ 랭킹을 확인할 수 없습니다! 종류를 잘못 입력했거나 아직 사용자 또는 단어가 없습니다!',
