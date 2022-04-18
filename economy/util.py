@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 
-from economy.models import Owner
+from economy.models import Owner, Word
 from util import database
 
 
@@ -10,6 +10,23 @@ def get_ranking_by_money(count: int = 10) -> List[Owner]:
     cursor = database.cursor()
     cursor.execute('SELECT id FROM owner ORDER BY money DESC LIMIT ?', (count,))
     return [Owner.get_by_id(row[0]) for row in cursor.fetchall()]
+
+
+def get_ranking_by_word(count: int = 10) -> List[List[Word, float, float, int]]:
+    """
+    Get ranking by word
+    :param count: count of the rows
+    :return: list of the converted rows with Word, fee, and fee_total
+    """
+    cursor = database.cursor()
+    words = dict()
+    for row in cursor.execute('SELECT user_id, word_id FROM word_use'):
+        if row[1] not in words:
+            word = Word.get_by_id(row[1])
+            words[row[1]] = [word, word.get_fee(), 0.0]
+        else:
+            words[row[1]][2] += words[row[1]][1]
+    return list(sorted(words.values(), key=lambda x: x[2], reverse=True))[:count]
 
 
 def add_log(user_id: int, word_id: int):

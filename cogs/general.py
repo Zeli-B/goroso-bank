@@ -10,7 +10,7 @@ from discord_slash.utils.manage_commands import create_option
 from const import CURRENCY_SYMBOL, DEVELOPERS, GUILDS, CURRENCY_NAME, YELLOW, AQUA, PERIOD
 from economy import market
 from economy.models import Owner, Word
-from economy.util import get_ranking_by_money, add_log, get_log
+from economy.util import get_ranking_by_money, add_log, get_log, get_ranking_by_word
 from util import eul_reul, i_ga
 
 
@@ -241,7 +241,7 @@ class GeneralCog(Cog):
                 description='랭킹을 확인할 종류',
                 option_type=SlashCommandOptionType.STRING,
                 required=True,
-                choices=['money']
+                choices=['money', 'word']
             )
         ]
     )
@@ -252,6 +252,9 @@ class GeneralCog(Cog):
             for i, owner in enumerate(get_ranking_by_money(10)):
                 user = self.bot.get_user(owner.id)
                 field.append(f'{i + 1}. {user.display_name} ({owner.money:,.2f} {CURRENCY_SYMBOL})')
+        elif kind == 'word':
+            for i, (word, fee, proceed) in enumerate(get_ranking_by_word(10)):
+                field.append(f'{i + 1}. {word} ({proceed:,.2f} / {fee:,.2f} {CURRENCY_SYMBOL})')
 
         if not field:
             await ctx.send(f':warning: __{kind}__ 랭킹을 확인할 수 없습니다! 종류를 잘못 입력했거나 아직 사용자 또는 단어가 없습니다!',
