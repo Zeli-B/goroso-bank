@@ -44,8 +44,9 @@ class GeneralCog(Cog):
                     break
                 else:
                     rate = word.preferences[owner.id] if owner.id in word.preferences else 1
-                    owner.set_money(owner.money - fee * rate)
-                    word_owner.set_money(word_owner.money + fee * rate * 1.1)
+                    if rate:
+                        owner.set_money(owner.money - fee * rate)
+                        word_owner.set_money(word_owner.money + fee * rate * 1.1)
                     add_log(message.author.id, word.id)
 
         if censored:
@@ -256,7 +257,8 @@ class GeneralCog(Cog):
         elif kind == 'word':
             for i, (word, fee, proceed) in enumerate(get_ranking_by_word(10)):
                 user = self.bot.get_user(word.owner_id)
-                field.append(f'{i + 1}. {word.word} ({user.display_name}, {proceed:,.2f} / {fee:,.2f} {CURRENCY_SYMBOL})')
+                field.append(f'{i + 1}. {word.word} '
+                             f'({user.display_name}, {proceed:,.2f} / {fee:,.2f} {CURRENCY_SYMBOL})')
 
         if not field:
             await ctx.send(f':warning: __{kind}__ 랭킹을 확인할 수 없습니다! 종류를 잘못 입력했거나 아직 사용자 또는 단어가 없습니다!',
@@ -552,6 +554,7 @@ class GeneralCog(Cog):
         else:
             await ctx.send(f':white_check_mark: __{user.display_name}__에게 __{word.word}__ 단어의 할인을 취소했습니다.',
                            delete_after=PERIOD)
+        self.words = Word.get_all()
 
     @cog_slash(
         name='debug_remove',
