@@ -146,7 +146,11 @@ class GeneralCog(Cog):
                 if market.is_on_sale(word.id):
                     words[-1] = f'__{words[-1]}__'
             words = ', '.join(words)
-            embed.add_field(name='등록된 단어 목록', value=words)
+            i = 1
+            while words:
+                embed.add_field(name=f'등록된 단어 목록 {i}', value=words[:2000], inline=False)
+                words = words[2000:]
+                i += 1
 
         await message.edit(content=f':white_check_mark: __{user.display_name}__님의 정보', embed=embed,
                            delete_after=PERIOD)
