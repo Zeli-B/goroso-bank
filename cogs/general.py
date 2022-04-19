@@ -11,7 +11,7 @@ from const import CURRENCY_SYMBOL, DEVELOPERS, GUILDS, CURRENCY_NAME, YELLOW, AQ
 from economy import market
 from economy.models import Owner, Word
 from economy.util import get_ranking_by_money, add_log, get_log, get_ranking_by_word
-from util import eul_reul, i_ga
+from util import eul_reul, i_ga, get_keys
 
 
 class GeneralCog(Cog):
@@ -20,8 +20,7 @@ class GeneralCog(Cog):
 
         self.words = Word.get_all()
 
-    async def handle_word_cost(self, message: Message):
-        owner = Owner.get_by_id(message.author.id)
+    async def handle_word_cost(self, owner: Owner, message: Message):
         if owner is None:
             return
         content = message.content
@@ -62,7 +61,17 @@ class GeneralCog(Cog):
     async def on_message(self, message: Message):
         if message.author.bot:
             return
-        await self.handle_word_cost(message)
+        owner = Owner.get_by_id(message.author.id)
+        if owner is not None:
+            await self.handle_word_cost(owner, message)
+
+            # give money by the key count
+            keys = 0
+            for letter in message.content:
+                if Word.is_valid(letter, no_length=True):
+                    keys += get_keys(letter)
+            if keys > 0:
+                owner.set_money(owner.money + keys * 0.008)
 
     @cog_slash(
         name='money',
@@ -122,14 +131,24 @@ class GeneralCog(Cog):
         if owner is None:
             await ctx.send(f':warning: __{user.display_name}__ 사용자를 찾을 수 없습니다.', delete_after=PERIOD)
             return
+
+        message = await ctx.send(f':hourglass: __{user.display_name}__님의 정보를 가져오는 중입니다...')
+
+        embed = Embed(title=f'{user.display_name}님의 정보', color=YELLOW)
+        embed.add_field(name='소지금', value=f'{owner.money:,.2f} {CURRENCY_SYMBOL}')
+        embed.add_field(name='출품한 단어 수', value=f'{len(owner.words)}개')
+        embed.add_field(name=f'총자본',
+                        value=f'{owner.money + sum(map(lambda x: x.price, owner.words)):,.2f} {CURRENCY_SYMBOL}')
         if owner.words:
-            words = ', '.join(map(
-                lambda word: (f'__{word.word}__' if market.is_on_sale(word.id) else word.word)
-                    + f' ({word.price:,.2f} {CURRENCY_SYMBOL})',
-                owner.words))
-            await ctx.send(f':white_check_mark: __{user.display_name}__님의 단어:\n> {words}', delete_after=PERIOD)
-        else:
-            await ctx.send(f':white_check_mark: __{user.display_name}__님은 아직 단어를 등록하지 않았습니다.',
+            words = list()
+            for word in owner.words:
+                words.append(f'{word.word}({round(word.price)})')
+                if market.is_on_sale(word.id):
+                    words[-1] = f'__{words[-1]}__'
+            words = ', '.join(words)
+            embed.add_field(name='등록된 단어 목록', value=words)
+
+        await message.edit(content=f':white_check_mark: __{user.display_name}__님의 정보', embed=embed,
                            delete_after=PERIOD)
 
     @cog_slash(

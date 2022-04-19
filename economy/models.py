@@ -101,9 +101,9 @@ class Owner:
 
 class Word:
     @staticmethod
-    def is_valid(word: str) -> bool:
+    def is_valid(word: str, *, no_length: bool = False) -> bool:
         """ Check if a word is valid. """
-        if len(word) < 2:
+        if not no_length and len(word) < 2:
             return False
         for letter in word:
             if not ('가' <= letter <= '힣'):
