@@ -99,7 +99,9 @@ def get_keys(sentence: str) -> int:
 
 
 def format_money(value: float) -> str:
-    result = f'{int(value):,}{CURRENCY_SYMBOL}'
+    result = list()
+    if value > 1:
+        result.append(f'{int(value):,}{CURRENCY_SYMBOL}')
     if micro := int((value - int(value)) * 1000):
-        result += f' {micro}m{CURRENCY_SYMBOL}'
-    return result
+        result.append(f'{micro}m{CURRENCY_SYMBOL}')
+    return ' '.join(result)
