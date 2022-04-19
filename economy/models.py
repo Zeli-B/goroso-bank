@@ -98,6 +98,9 @@ class Owner:
             self.words.append(Word.get_by_id(row[0]))
         return self
 
+    def get_property(self) -> float:
+        return self.money + sum(map(lambda x: x.price, self.words))
+
 
 class Word:
     @staticmethod

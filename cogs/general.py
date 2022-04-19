@@ -94,7 +94,8 @@ class GeneralCog(Cog):
         if owner is None:
             await ctx.send(f':warning: __{user.display_name}__ 사용자를 찾을 수 없습니다.')
             return
-        await ctx.send(f':white_check_mark: __{user.display_name}__님의 소지금: __{format_money(owner.money)}__',
+        await ctx.send(f':white_check_mark: __{user.display_name}__님의 소지금: __{format_money(owner.money)}__, '
+                       f'총 자본: __{format_money(owner.get_property())}__',
                        delete_after=PERIOD)
 
     @cog_slash(
@@ -137,8 +138,7 @@ class GeneralCog(Cog):
         embed = Embed(title=f'{user.display_name}님의 정보', color=YELLOW)
         embed.add_field(name='소지금', value=f'{format_money(owner.money)}')
         embed.add_field(name='출품한 단어 수', value=f'{len(owner.words)}개')
-        embed.add_field(name=f'총자본',
-                        value=f'{format_money(owner.money + sum(map(lambda x: x.price, owner.words)))}')
+        embed.add_field(name=f'총자본', value=format_money(owner.get_property()))
         if owner.words:
             words = list()
             for word in owner.words:
