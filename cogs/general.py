@@ -124,7 +124,8 @@ class GeneralCog(Cog):
             return
         if owner.words:
             words = ', '.join(map(
-                lambda word: f'__{word.word}__' if market.is_on_sale(word.id) else word.word,
+                lambda word: (f'__{word.word}__' if market.is_on_sale(word.id) else word.word)
+                    + f' ({word.price:,.2f} {CURRENCY_SYMBOL})',
                 owner.words))
             await ctx.send(f':white_check_mark: __{user.display_name}__님의 단어:\n> {words}', delete_after=PERIOD)
         else:
