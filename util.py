@@ -99,6 +99,8 @@ def get_keys(sentence: str) -> int:
 
 
 def format_money(value: float) -> str:
+    if not value:
+        return '0' + CURRENCY_SYMBOL
     result = list()
     if value > 1:
         result.append(f'{int(value):,}{CURRENCY_SYMBOL}')
