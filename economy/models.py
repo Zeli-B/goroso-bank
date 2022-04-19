@@ -4,8 +4,8 @@ from typing import List, Optional, Dict
 from discord import Embed
 from discord_slash import SlashContext
 
-from const import CURRENCY_SYMBOL, YELLOW
-from util import database
+from const import YELLOW
+from util import database, format_money
 
 
 class Owner:
@@ -91,10 +91,10 @@ class Owner:
         return self.save()
 
     def __str__(self):
-        return f'Owner {self.id} ({self.money:.2f}{CURRENCY_SYMBOL}, {len(self.words)} words)'
+        return f'Owner {self.id} ({format_money(self.money)}, {len(self.words)} words)'
 
     def __repr__(self):
-        return f'Owner({self.id}, {self.money:.2f}{CURRENCY_SYMBOL}, {len(self.words)}words)'
+        return f'Owner({self.id}, {format_money(self.money)}, {len(self.words)}words)'
 
     def load_words(self) -> 'Owner':
         """
@@ -262,8 +262,8 @@ class Word:
         owner = ctx.guild.get_member(self.owner_id)
         used = self.get_used_count()
         embed = Embed(title=f'__{self.word}__ 단어 정보', color=YELLOW)
-        embed.add_field(name='사용료', value=f'__**{self.get_fee():.2f} {CURRENCY_SYMBOL}**__')
-        embed.add_field(name='가격', value=f'{self.price:.1f} {CURRENCY_SYMBOL}')
+        embed.add_field(name='사용료', value=f'__**{format_money(self.get_fee())}**__')
+        embed.add_field(name='가격', value=f'{format_money(self.price)}')
         embed.add_field(name='소유자', value=f'{owner.display_name}')
         if self.preferences:
             lines = list()
