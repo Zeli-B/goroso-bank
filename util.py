@@ -1,5 +1,7 @@
 from sqlite3 import connect
 
+from const import CURRENCY_SYMBOL
+
 database = connect('res/db')
 
 
@@ -94,3 +96,10 @@ def get_keys(sentence: str) -> int:
         else:
             keys += 1
     return keys
+
+
+def format_money(value: float) -> str:
+    result = f'{int(value):,}{CURRENCY_SYMBOL}'
+    if micro := int((value - int(value)) * 1000):
+        result += f' {micro}m{CURRENCY_SYMBOL}'
+    return result

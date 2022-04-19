@@ -7,11 +7,11 @@ from discord_slash import SlashCommandOptionType, SlashContext
 from discord_slash.cog_ext import cog_slash
 from discord_slash.utils.manage_commands import create_option
 
-from const import CURRENCY_SYMBOL, DEVELOPERS, GUILDS, CURRENCY_NAME, YELLOW, AQUA, PERIOD
+from const import DEVELOPERS, GUILDS, CURRENCY_NAME, YELLOW, AQUA, PERIOD
 from economy import market
 from economy.models import Owner, Word
 from economy.util import get_ranking_by_money, add_log, get_log, get_ranking_by_word
-from util import eul_reul, i_ga, get_keys
+from util import eul_reul, i_ga, get_keys, format_money
 
 
 class GeneralCog(Cog):
@@ -71,7 +71,7 @@ class GeneralCog(Cog):
                 if Word.is_valid(letter, no_length=True):
                     keys += get_keys(letter)
             if keys > 0:
-                owner.set_money(owner.money + keys * 0.008)
+                owner.set_money(owner.money + keys * 0.009)
 
     @cog_slash(
         name='money',
@@ -94,7 +94,7 @@ class GeneralCog(Cog):
         if owner is None:
             await ctx.send(f':warning: __{user.display_name}__ 사용자를 찾을 수 없습니다.')
             return
-        await ctx.send(f':white_check_mark: __{user.display_name}__님의 소지금: __{owner.money:,.2f} {CURRENCY_SYMBOL}__',
+        await ctx.send(f':white_check_mark: __{user.display_name}__님의 소지금: __{format_money(owner.money)}__',
                        delete_after=PERIOD)
 
     @cog_slash(
@@ -135,10 +135,10 @@ class GeneralCog(Cog):
         message = await ctx.send(f':hourglass: __{user.display_name}__님의 정보를 가져오는 중입니다...')
 
         embed = Embed(title=f'{user.display_name}님의 정보', color=YELLOW)
-        embed.add_field(name='소지금', value=f'{owner.money:,.2f} {CURRENCY_SYMBOL}')
+        embed.add_field(name='소지금', value=f'{format_money(owner.money)}')
         embed.add_field(name='출품한 단어 수', value=f'{len(owner.words)}개')
         embed.add_field(name=f'총자본',
-                        value=f'{owner.money + sum(map(lambda x: x.price, owner.words)):,.2f} {CURRENCY_SYMBOL}')
+                        value=f'{format_money(owner.money + sum(map(lambda x: x.price, owner.words)))}')
         if owner.words:
             words = list()
             for word in owner.words:
@@ -188,7 +188,7 @@ class GeneralCog(Cog):
             return
         if owner.money < price:
             await ctx.send(f':warning: __{ctx.author.display_name}__님의 소지금이 부족합니다! '
-                           f'(현재 __{owner.money:,.2f} {CURRENCY_SYMBOL}__만큼을 가지고 있습니다.)', delete_after=PERIOD)
+                           f'(현재 __{format_money(owner.money)}__만큼을 가지고 있습니다.)', delete_after=PERIOD)
             return
         owner.set_money(owner.money - price)
         word = Word.new(owner, word, price)
@@ -273,12 +273,12 @@ class GeneralCog(Cog):
         if kind == 'money':
             for i, owner in enumerate(get_ranking_by_money(10)):
                 user = self.bot.get_user(owner.id)
-                field.append(f'{i + 1}. {user.display_name} ({owner.money:,.2f} {CURRENCY_SYMBOL})')
+                field.append(f'{i + 1}. {user.display_name} ({format_money(owner.money)})')
         elif kind == 'word':
             for i, (word, fee, proceed) in enumerate(get_ranking_by_word(10)):
                 user = self.bot.get_user(word.owner_id)
                 field.append(f'{i + 1}. {word.word} '
-                             f'({user.display_name}, {proceed:,.2f} / {fee:,.2f} {CURRENCY_SYMBOL})')
+                             f'({user.display_name}, {format_money(proceed)} / {format_money(fee)})')
 
         if not field:
             await ctx.send(f':warning: __{kind}__ 랭킹을 확인할 수 없습니다! 종류를 잘못 입력했거나 아직 사용자 또는 단어가 없습니다!',
@@ -345,7 +345,7 @@ class GeneralCog(Cog):
 
         market.exhibit(economy_word, price)
 
-        await ctx.send(f':white_check_mark: __{economy_word.word}__ 단어를 시장에 __{price} {CURRENCY_SYMBOL}__에 내놓았습니다.',
+        await ctx.send(f':white_check_mark: __{economy_word.word}__ 단어를 시장에 __{format_money(price)}__에 내놓았습니다.',
                        delete_after=PERIOD)
 
     @cog_slash(
@@ -410,9 +410,9 @@ class GeneralCog(Cog):
         embed = Embed(title='시장', color=AQUA, description='정렬: ' + sort)
         for word in words:
             price = market.get_price(word.id)
-            embed.add_field(name=f'{word.word} ({price} {CURRENCY_SYMBOL})',
-                            value=f'**판매가**  {price} {CURRENCY_SYMBOL}\n'
-                                  f'**원가**  {word.price} {CURRENCY_SYMBOL}\n'
+            embed.add_field(name=f'{word.word} ({format_money(price)})',
+                            value=f'**판매가**  {format_money(price)}\n'
+                                  f'**원가**  {format_money(word.price)}\n'
                                   f'**현 소유자** {self.bot.get_user(word.owner_id).display_name}')
         await ctx.send(embed=embed, delete_after=PERIOD)
 
@@ -444,9 +444,9 @@ class GeneralCog(Cog):
         price = market.get_price(economy_word.id)
         if buyer.money < price:
             await ctx.send(f':warning: 돈이 부족합니다. '
-                           f'현재 가지고 있는 돈은 __{buyer.money:,.2f} {CURRENCY_SYMBOL}__이고 '
-                           f'단어는 __{price:,.2f} {CURRENCY_SYMBOL}__이므로 '
-                           f'__{price - buyer.money:,.2f} {CURRENCY_SYMBOL}__{i_ga(CURRENCY_NAME)} 더 필요합니다.',
+                           f'현재 가지고 있는 돈은 __{format_money(buyer.money)}__이고 '
+                           f'단어는 __{format_money(price)}__이므로 '
+                           f'__{format_money(price - buyer.money)}__{i_ga(CURRENCY_NAME)} 더 필요합니다.',
                            delete_after=PERIOD)
             return
         owner = Owner.get_by_id(economy_word.owner_id)
@@ -486,9 +486,9 @@ class GeneralCog(Cog):
         if amount > Owner.get_by_id(ctx.author_id).money:
             await ctx.send(
                 f':warning: 돈이 부족합니다. '
-                f'현재 가지고 있는 돈은 __{Owner.get_by_id(ctx.author_id).money:,.2f} {CURRENCY_SYMBOL}__이고 '
-                f'송금할 금액은 __{amount:,.2f} {CURRENCY_SYMBOL}__이므로 '
-                f'__{amount - Owner.get_by_id(ctx.author_id).money:,.2f} {CURRENCY_SYMBOL}__{i_ga(CURRENCY_NAME)} '
+                f'현재 가지고 있는 돈은 __{format_money(Owner.get_by_id(ctx.author_id).money)}__이고 '
+                f'송금할 금액은 __{format_money(amount)}__이므로 '
+                f'__{format_money(amount - Owner.get_by_id(ctx.author_id).money)}__{i_ga(CURRENCY_NAME)} '
                 f'더 필요합니다.',
                 delete_after=PERIOD)
             return
@@ -496,7 +496,7 @@ class GeneralCog(Cog):
         to_owner = Owner.get_by_id(to.id)
         from_owner.set_money(from_owner.money - amount)
         to_owner.set_money(to_owner.money + amount)
-        await ctx.send(f':white_check_mark: __{amount:,.2f} {CURRENCY_SYMBOL}__{eul_reul(CURRENCY_NAME)} 송금했습니다.',
+        await ctx.send(f':white_check_mark: __{format_money(amount)}__{eul_reul(CURRENCY_NAME)} 송금했습니다.',
                        delete_after=PERIOD)
 
     @cog_slash(
@@ -619,7 +619,7 @@ class GeneralCog(Cog):
             return
         owner.set_money(money)
         await ctx.send(f':white_check_mark: __{user.display_name}__님의 소지금을 '
-                       f'__{money:,.2f} {CURRENCY_SYMBOL}__로 설정했습니다.', delete_after=PERIOD)
+                       f'__{format_money(money)}__로 설정했습니다.', delete_after=PERIOD)
 
 
 def setup(bot: Bot):
