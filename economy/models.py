@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from typing import List, Optional, Dict
 
 from discord import Embed
@@ -246,8 +247,9 @@ class Word:
 
     def get_embed(self, ctx: SlashContext) -> Embed:
         owner = ctx.guild.get_member(self.owner_id)
+        used = self.get_used_count()
         embed = Embed(title=f'__{self.word}__ 단어 정보', color=YELLOW)
-        embed.add_field(name='사용료', value=f'__**{self.get_fee():.2f} {CURRENCY_SYMBOL}**__', inline=False)
+        embed.add_field(name='사용료', value=f'__**{self.get_fee():.2f} {CURRENCY_SYMBOL}**__')
         embed.add_field(name='가격', value=f'{self.price:.1f} {CURRENCY_SYMBOL}')
         embed.add_field(name='소유자', value=f'{owner.display_name}')
         if self.preferences:
@@ -258,4 +260,12 @@ class Word:
                     continue
                 lines.append(f'- {user.display_name}: {(1 - rate) * 100:.2f}%')
             embed.add_field(name='할인', value='\n'.join(lines), inline=False)
+        embed.add_field(name='과거 1일간 검출 기록', value=f'{used} 회')
         return embed
+
+    def get_used_count(self, while_: timedelta = timedelta(days=1)) -> int:
+        """ Fetch how many this word is detected in the past. """
+        cursor = database.cursor()
+        cursor.execute('SELECT COUNT(*) FROM word_use WHERE word_id = ? AND datetime > ?',
+                       (self.id, datetime.now() - while_))
+        return cursor.fetchone()[0]
