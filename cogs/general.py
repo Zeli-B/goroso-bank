@@ -28,7 +28,7 @@ class GeneralCog(Cog):
         censored = False
         used_words = list()
 
-        for word in self.words:
+        for word in sorted(self.words, key=lambda x: len(x.word), reverse=True):
             if censored:
                 break
             while word.word in content:
