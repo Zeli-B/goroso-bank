@@ -502,9 +502,13 @@ class GeneralCog(Cog):
             return
         from_owner = Owner.get_by_id(ctx.author_id)
         to_owner = Owner.get_by_id(to.id)
+        if to_owner is None:
+            await ctx.send(f':warning: __{to.display_name}__에게 돈을 송금할 수 없습니다.', delete_after=PERIOD)
+            return
         from_owner.set_money(from_owner.money - amount)
         to_owner.set_money(to_owner.money + amount)
-        await ctx.send(f':white_check_mark: __{format_money(amount)}__{eul_reul(CURRENCY_NAME)} 송금했습니다.',
+        await ctx.send(f':white_check_mark: __{to.display_name}__에게 '
+                       f'__{format_money(amount)}__{eul_reul(CURRENCY_NAME)} 송금했습니다.',
                        delete_after=PERIOD)
 
     @cog_slash(
