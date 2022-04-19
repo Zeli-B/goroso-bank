@@ -531,7 +531,7 @@ class GeneralCog(Cog):
             user = self.bot.get_user(user_id)
             word = Word.get_by_id(word_id)
             lines.append(f'{i + 1}. {datetime}, {user.display_name}: {word.word}')
-        embed = Embed(title='기록', description='\n'.join(lines))
+        embed = Embed(title='기록', description='\n'.join(lines), color=YELLOW)
         await message.edit(content=f':white_check_mark: `{type_}` 기록을 가져왔습니다.', embed=embed, delete_after=PERIOD)
 
     @cog_slash(
