@@ -35,6 +35,16 @@ class Owner:
         return Owner(id_, row[1]).load_words()
 
     @staticmethod
+    def get_all() -> List['Owner']:
+        """
+        Get all economy owners.
+        :return: List of Owner objects
+        """
+        cursor = database.cursor()
+        cursor.execute('SELECT id FROM owner')
+        return [Owner.get_by_id(row[0]) for row in cursor.fetchall()]
+
+    @staticmethod
     def new(id_: int):
         """
         Create a new economy Owner.

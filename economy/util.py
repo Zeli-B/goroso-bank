@@ -28,6 +28,11 @@ def get_ranking_by_word(count: int = 10):
     return list(sorted(words.values(), key=lambda x: x[2], reverse=True))[:count]
 
 
+def get_ranking_by_property(count: int = 10) -> List[Owner]:
+    """ Get ranking by property """
+    return list(sorted(Owner.get_all(), key=lambda x: x.get_property(), reverse=True))[:count]
+
+
 def add_log(user_id: int, word_id: int):
     """ Add log """
     now = datetime.now()
