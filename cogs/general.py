@@ -148,8 +148,8 @@ class GeneralCog(Cog):
             words = ', '.join(words)
             i = 1
             while words:
-                embed.add_field(name=f'등록된 단어 목록 {i}', value=words[:2000], inline=False)
-                words = words[2000:]
+                embed.add_field(name=f'등록된 단어 목록 {i}', value=words[:1024], inline=False)
+                words = words[1024:]
                 i += 1
 
         await message.edit(content=f':white_check_mark: __{user.display_name}__님의 정보', embed=embed,
